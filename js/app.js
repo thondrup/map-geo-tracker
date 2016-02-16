@@ -24,19 +24,25 @@ var Positions = function() {
         };
     };
 
-    var Renderer = function(element) {
+    var Renderer = function() {
+        var positions = document.getElementById("positions");
+        var status = document.getElementById("status");
+
         return {
             add: function (key, value) {
                 var child = document.createElement("div");
                 child.id = key;
                 child.appendChild(document.createTextNode(value.lat + ", " + value.lng));
-                element.appendChild(child);
+                positions.appendChild(child);
             },
             remove: function (key) {
-                element.removeChild(document.getElementById(key));
+                positions.removeChild(document.getElementById(key));
             },
             update: function (key, value) {
                 document.getElementById(key).innerHTML = value.lat + ", " + value.lng;
+            },
+            status : function(message) {
+                status.innerHTML = message;
             }
         };
     };
@@ -80,6 +86,8 @@ var Positions = function() {
                     setInterval(function() {
                         if(this.ref !== null) {
                             new Location().get(function (location) {
+                                renderer.status("Your position: " + location.coords.latitude + ", " + location.coords.longitude +
+                                    ", updated " + new Date());
                                 // Add the user position to Firebase
                                 firebase.child(this.ref).set({
                                     lat: location.coords.latitude,
@@ -94,9 +102,8 @@ var Positions = function() {
     };
 
     return {
-        init : function(elementId) {
-            var element = document.getElementById(elementId);
-            var renderer = new Renderer(element);
+        init : function() {
+            var renderer = new Renderer();
             new Register(renderer).init();
         }
     };
