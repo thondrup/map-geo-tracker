@@ -58,6 +58,10 @@ var Positions = function() {
                     // Remove the position from display when the position is removed
                     firebase.on("child_removed", function (snapshot) {
                         renderer.remove(snapshot.key(), snapshot.val())
+                        if(this.ref == snapshot.key()) {
+                            this.ref = null;
+                            alert("You lost connection. Refresh to reconnect");
+                        }
                     });
 
                     // Update the position in display when the position is updated
@@ -74,10 +78,15 @@ var Positions = function() {
 
                     // Update the user position every 1 second
                     setInterval(function() {
-                        new Location().get(function (location) {
-                            // Add the user position to Firebase
-                            firebase.child(this.ref).set({lat: location.coords.latitude, lng: location.coords.longitude});
-                        });
+                        if(this.ref !== null) {
+                            new Location().get(function (location) {
+                                // Add the user position to Firebase
+                                firebase.child(this.ref).set({
+                                    lat: location.coords.latitude,
+                                    lng: location.coords.longitude
+                                });
+                            });
+                        }
                     }, 1000);
                 });
             }
