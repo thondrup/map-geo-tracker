@@ -1,8 +1,20 @@
 var Positions = function() {
 
     var Location = function() {
+        var error = function(error) {
+            if (error.code == 1) {
+                console.error("PERMISSION_DENIED: User denied access to their location");
+            } else if (error.code === 2) {
+                console.error("POSITION_UNAVAILABLE: Network is down or positioning satellites cannot be reached");
+            } else if (error.code === 3) {
+                console.error("TIMEOUT: Calculating the user's location too took long");
+            } else {
+                console.error("Unexpected error code")
+            }
+        };
+
         return {
-            get: function (success, error) {
+            get: function (success) {
                 if (typeof navigator !== "undefined" && typeof navigator.geolocation !== "undefined") {
                     navigator.geolocation.getCurrentPosition(success, error);
                 } else {
@@ -29,9 +41,11 @@ var Positions = function() {
         };
     };
 
-    var Register = function() {
+    var Register = function(renderer) {
+        var ref = null;
+
         return {
-            init: function (renderer) {
+            init: function () {
                 new Location().get(function (location) {
                     var firebase = new Firebase("https://ourmap.firebaseio.com/");
                     var post = {lat: location.coords.latitude, lng: location.coords.longitude};
@@ -54,19 +68,17 @@ var Positions = function() {
                     // Add the user position to Firebase
                     firebase.push(post).then(function (ref) {
                         // Remove the user position from Firebase when the user disconnects
+                        this.ref = ref.key();
                         firebase.child(ref.key()).onDisconnect().remove();
                     });
 
-                }, function (error) {
-                    if (error.code == 1) {
-                        console.error("PERMISSION_DENIED: User denied access to their location");
-                    } else if (error.code === 2) {
-                        console.error("POSITION_UNAVAILABLE: Network is down or positioning satellites cannot be reached");
-                    } else if (error.code === 3) {
-                        console.error("TIMEOUT: Calculating the user's location too took long");
-                    } else {
-                        console.error("Unexpected error code")
-                    }
+                    // Update the user position every 1 second
+                    setInterval(function() {
+                        new Location().get(function (location) {
+                            // Add the user position to Firebase
+                            firebase.child(this.ref).set({lat: location.coords.latitude, lng: location.coords.longitude});
+                        });
+                    }, 1000);
                 });
             }
         };
@@ -76,7 +88,7 @@ var Positions = function() {
         init : function(elementId) {
             var element = document.getElementById(elementId);
             var renderer = new Renderer(element);
-            new Register().init(renderer);
+            new Register(renderer).init();
         }
     };
 
