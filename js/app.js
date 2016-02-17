@@ -40,24 +40,30 @@ var Positions = function() {
     };
 
     var Renderer = function() {
-        var positionsElmt = document.getElementById("positions");
-        var statusElmt = document.getElementById("status");
+        var mapElmt = document.getElementById("map");
+
+        var map = new google.maps.Map(mapElmt, {
+            center: {lat: 0, lng: 0},
+            zoom: 3
+        });
+
+        var markers = {};
 
         return {
             add: function (user) {
-                var child = document.createElement("div");
-                child.id = user.key;
-                child.appendChild(document.createTextNode(user.location.lat + ", " + user.location.lng));
-                positionsElmt.appendChild(child);
+                var latLng = new google.maps.LatLng(user.location.lat, user.location.lng);
+                var marker = new google.maps.Marker({
+                    position: latLng,
+                    map: map
+                });
+
+                markers[user.key] = marker;
             },
             remove: function (key) {
-                positionsElmt.removeChild(document.getElementById(key));
+                markers[key].setMap(null);
             },
             update: function (user) {
-                document.getElementById(user.key).innerHTML = user.location.lat + ", " + user.location.lng;
-            },
-            status : function(message) {
-                statusElmt.innerHTML = message;
+                markers[user.key].setPosition(user.location.lat, user.location.lng);
             }
         };
     };

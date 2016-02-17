@@ -9,11 +9,13 @@
     <link rel="stylesheet" type="text/css" href="css/app.css">
 </head>
 <body>
-    <div id="status"></div>
-    <div id="positions"></div>
+    <div id="map" class="map"></div>
     <div id="log"></div>
     <script>
-        new Positions().init();
+        function initMap() {
+            new Positions().init();
+        }
     </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=visualization&callback=initMap"></script>
 </body>
 </html>
