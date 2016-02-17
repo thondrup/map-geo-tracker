@@ -105,7 +105,6 @@ var Positions = function() {
                                     }
                                 };
 
-                                Log().log("Local:" + locally.location.lat + ", " + locally.location.lng + ". Device: " + location.lat + ", " + location.lng);
                                 if(locally.key != null && (location.lat != locally.location.lat || location.lng != locally.location.lng)) {
                                     Log().log("Updating Firebase");
                                     firebase.child(locally.key).set(location, onComplete);
