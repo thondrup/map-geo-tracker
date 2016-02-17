@@ -16,7 +16,18 @@ var Positions = function() {
         return {
             get: function (callback) {
                 var success = function(location) {
-                    callback({ lat: location.coords.latitude.toString(), lng : location.coords.longitude.toString() });
+                    var lat = location.coords.latitude.toString();
+                    var lng = location.coords.longitude.toString();
+
+                    var extended = {
+                        lat: lat,
+                        lng : lng,
+                        equals : function(location) {
+                            return lat === location.lat && lng === location.lng;
+                        }
+                    };
+
+                    callback(extended);
                 };
 
                 if (typeof navigator !== "undefined" && typeof navigator.geolocation !== "undefined") {
@@ -66,7 +77,7 @@ var Positions = function() {
     };
 
     var Register = function(renderer) {
-        var locally = {key: null, location: { lat: null, lng: null }};
+        var locally = {};
 
         return {
             init: function () {
@@ -74,8 +85,11 @@ var Positions = function() {
                     var firebase = new Firebase("https://ourmap.firebaseio.com/");
 
                     firebase.on("child_added", function (snapshot) {
-                        var user = {key: snapshot.key(), location: snapshot.val()};
-                        renderer.add(user);
+                        renderer.add({key: snapshot.key(), location: snapshot.val()});
+                    });
+
+                    firebase.on("child_changed", function (snapshot) {
+                        renderer.update({key: snapshot.key(), location: snapshot.val()});
                     });
 
                     firebase.on("child_removed", function (snapshot) {
@@ -86,12 +100,7 @@ var Positions = function() {
                         }
                     });
 
-                    firebase.on("child_changed", function (snapshot) {
-                        var user = {key: snapshot.key(), location: snapshot.val()};
-                        renderer.update(user);
-                    });
-
-                    firebase.push(location).then(function (ref) {
+                    firebase.push({lat: location.lat, lng: location.lng}).then(function (ref) {
                         locally.key = ref.key();
                         locally.location = location;
                         firebase.child(ref.key()).onDisconnect().remove();
@@ -99,15 +108,8 @@ var Positions = function() {
                         // Update the user position every 1 second
                         setInterval(function() {
                             new Location().get(function (location) {
-                                var onComplete = function(error) {
-                                    if(error) {
-                                        Log().log("Synchronization failed");
-                                    }
-                                };
-
-                                if(locally.key != null && (location.lat != locally.location.lat || location.lng != locally.location.lng)) {
-                                    Log().log("Updating Firebase");
-                                    firebase.child(locally.key).set(location, onComplete);
+                                if(locally.key != null && !location.equals(locally.location)) {
+                                    firebase.child(locally.key).set({lat: location.lat, lng: location.lng});
                                 }
 
                                 locally.location = location;
