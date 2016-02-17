@@ -14,7 +14,11 @@ var Positions = function() {
         };
 
         return {
-            get: function (success) {
+            get: function (callback) {
+                var success = function(location) {
+                    callback({ lat: location.coords.latitude.toString(), lng : location.coords.longitude.toString() });
+                };
+
                 if (typeof navigator !== "undefined" && typeof navigator.geolocation !== "undefined") {
                     navigator.geolocation.getCurrentPosition(success, error);
                 } else {
@@ -69,7 +73,6 @@ var Positions = function() {
             init: function () {
                 new Location().get(function (location) {
                     var firebase = new Firebase("https://ourmap.firebaseio.com/");
-                    var post = {lat: location.coords.latitude, lng: location.coords.longitude};
 
                     // Show the position of an added position
                     firebase.on("child_added", function (snapshot) {
@@ -93,7 +96,7 @@ var Positions = function() {
                     });
 
                     // Add the user position to Firebase
-                    firebase.push(post).then(function (ref) {
+                    firebase.push(location).then(function (ref) {
                         // Remove the user position from Firebase when the user disconnects
                         this.locationKey = ref.key();
                         firebase.child(ref.key()).onDisconnect().remove();
@@ -110,19 +113,16 @@ var Positions = function() {
                                 }
                             };
 
-                            renderer.status("Your position: " + location.coords.latitude + ", " + location.coords.longitude +
-                                ", updated " + new Date());
+                            renderer.status("Your position: " + location.lat + ", " + location.lng + ", updated " + new Date());
 
-                            if(this.locationKey !== null && (location.coords.latitude !== previousLocation.lat || location.coords.longitude !== previousLocation.lng)) {
+                            Log().log("PreviousLocation: " + previousLocation.lat + ", " + previousLocation.lng);
+                            if(this.locationKey != null && (location.lat != previousLocation.lat || location.lng != previousLocation.lng)) {
                                 // Update the user position to Firebase
                                 Log().log("Detected change in location. Updating Firebase");
-                                firebase.child(this.locationKey).set({
-                                    lat: location.coords.latitude,
-                                    lng: location.coords.longitude
-                                }, onComplete);
+                                firebase.child(this.locationKey).set(location, onComplete);
                             }
 
-                            previousLocation = { lat : location.coords.latitude, lng : location.coords.longitude };
+                            previousLocation = location;
                         });
                     }, 1000);
                 });
