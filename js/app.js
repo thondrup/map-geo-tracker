@@ -82,8 +82,8 @@ var Positions = function() {
                     // Remove the position from display when the position is removed
                     firebase.on("child_removed", function (snapshot) {
                         renderer.remove(snapshot.key(), snapshot.val());
-                        if(this.locationKey == snapshot.key()) {
-                            this.locationKey = null;
+                        if(locationKey == snapshot.key()) {
+                            locationKey = null;
                             Log().log("You lost connection. Refresh to reconnect");
                         }
                     });
@@ -96,7 +96,7 @@ var Positions = function() {
                     // Add the user position to Firebase
                     firebase.push(location).then(function (ref) {
                         // Remove the user position from Firebase when the user disconnects
-                        this.locationKey = ref.key();
+                        locationKey = ref.key();
                         firebase.child(ref.key()).onDisconnect().remove();
                     });
 
@@ -111,9 +111,9 @@ var Positions = function() {
 
                             renderer.status("Your position: " + location.lat + ", " + location.lng + ", updated " + new Date());
 
-                            if(this.locationKey != null && (location.lat != previousLocation.lat || location.lng != previousLocation.lng)) {
+                            if(locationKey != null && (location.lat != previousLocation.lat || location.lng != previousLocation.lng)) {
                                 // Update the user position to Firebase
-                                firebase.child(this.locationKey).set(location, onComplete);
+                                firebase.child(locationKey).set(location, onComplete);
                             }
 
                             previousLocation = location;
