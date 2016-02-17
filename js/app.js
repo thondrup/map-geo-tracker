@@ -25,30 +25,45 @@ var Positions = function() {
     };
 
     var Renderer = function() {
-        var positions = document.getElementById("positions");
-        var status = document.getElementById("status");
+        var positionsElmt = document.getElementById("positions");
+        var statusElmt = document.getElementById("status");
 
         return {
             add: function (key, value) {
                 var child = document.createElement("div");
                 child.id = key;
                 child.appendChild(document.createTextNode(value.lat + ", " + value.lng));
-                positions.appendChild(child);
+                positionsElmt.appendChild(child);
             },
             remove: function (key) {
-                positions.removeChild(document.getElementById(key));
+                positionsElmt.removeChild(document.getElementById(key));
             },
             update: function (key, value) {
                 document.getElementById(key).innerHTML = value.lat + ", " + value.lng;
             },
             status : function(message) {
-                status.innerHTML = message;
+                statusElmt.innerHTML = message;
+            }
+        };
+    };
+
+    var Log = function() {
+        var logElmt = document.getElementById("log");
+        var log = [];
+
+        return {
+            log: function (entry) {
+                log.push(entry);
+                var child = document.createElement("div");
+                child.appendChild(document.createTextNode(entry));
+                logElmt.appendChild(child);
             }
         };
     };
 
     var Register = function(renderer) {
-        var ref = null;
+        var locationKey = null;
+        var previousLocation = {};
 
         return {
             init: function () {
@@ -63,10 +78,10 @@ var Positions = function() {
 
                     // Remove the position from display when the position is removed
                     firebase.on("child_removed", function (snapshot) {
-                        renderer.remove(snapshot.key(), snapshot.val())
-                        if(this.ref == snapshot.key()) {
-                            this.ref = null;
-                            alert("You lost connection. Refresh to reconnect");
+                        renderer.remove(snapshot.key(), snapshot.val());
+                        if(this.locationKey == snapshot.key()) {
+                            this.locationKey = null;
+                            Log().log("You lost connection. Refresh to reconnect");
                         }
                     });
 
@@ -78,23 +93,35 @@ var Positions = function() {
                     // Add the user position to Firebase
                     firebase.push(post).then(function (ref) {
                         // Remove the user position from Firebase when the user disconnects
-                        this.ref = ref.key();
+                        this.locationKey = ref.key();
                         firebase.child(ref.key()).onDisconnect().remove();
                     });
 
                     // Update the user position every 1 second
                     setInterval(function() {
-                        if(this.ref !== null) {
-                            new Location().get(function (location) {
-                                renderer.status("Your position: " + location.coords.latitude + ", " + location.coords.longitude +
-                                    ", updated " + new Date());
-                                // Add the user position to Firebase
-                                firebase.child(this.ref).set({
+                        new Location().get(function (location) {
+                            var onComplete = function(error) {
+                                if(error) {
+                                    Log().log("Synchronization failed");
+                                } else {
+                                    Log().log("Synchronization succeeded")
+                                }
+                            };
+
+                            renderer.status("Your position: " + location.coords.latitude + ", " + location.coords.longitude +
+                                ", updated " + new Date());
+
+                            if(this.locationKey !== null && (location.coords.latitude !== previousLocation.lat || location.coords.longitude !== previousLocation.lng)) {
+                                // Update the user position to Firebase
+                                Log().log("Detected change in location. Updating Firebase");
+                                firebase.child(this.locationKey).set({
                                     lat: location.coords.latitude,
                                     lng: location.coords.longitude
-                                });
-                            });
-                        }
+                                }, onComplete);
+                            }
+
+                            previousLocation = { lat : location.coords.latitude, lng : location.coords.longitude };
+                        });
                     }, 1000);
                 });
             }
