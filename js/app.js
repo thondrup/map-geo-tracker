@@ -51,7 +51,7 @@ var Positions = function() {
 
         return {
             add: function (user) {
-                var latLng = new google.maps.LatLng(user.location.lat, user.location.lng);
+                var latLng = new google.maps.LatLng(parseFloat(user.location.lat), parseFloat(user.location.lng));
                 var marker = new google.maps.Marker({
                     position: latLng,
                     map: map
@@ -63,7 +63,8 @@ var Positions = function() {
                 markers[key].setMap(null);
             },
             update: function (user) {
-                markers[user.key].setPosition(user.location.lat, user.location.lng);
+                var latLng = new google.maps.LatLng(parseFloat(user.location.lat), parseFloat(user.location.lng));
+                markers[user.key].setPosition(latLng);
             }
         };
     };
