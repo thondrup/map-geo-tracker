@@ -33,17 +33,17 @@ var Positions = function() {
         var statusElmt = document.getElementById("status");
 
         return {
-            add: function (key, value) {
+            add: function (user) {
                 var child = document.createElement("div");
-                child.id = key;
-                child.appendChild(document.createTextNode(value.lat + ", " + value.lng));
+                child.id = user.key;
+                child.appendChild(document.createTextNode(user.location.lat + ", " + user.location.lng));
                 positionsElmt.appendChild(child);
             },
             remove: function (key) {
                 positionsElmt.removeChild(document.getElementById(key));
             },
-            update: function (key, value) {
-                document.getElementById(key).innerHTML = value.lat + ", " + value.lng;
+            update: function (user) {
+                document.getElementById(user.key).innerHTML = user.location.lat + ", " + user.location.lng;
             },
             status : function(message) {
                 statusElmt.innerHTML = message;
@@ -66,37 +66,34 @@ var Positions = function() {
     };
 
     var Register = function(renderer) {
-        var locationKey = null;
-        var previousLocation = {};
+        var locally = {key: null, location: { lat: null, lng: null }};
 
         return {
             init: function () {
                 new Location().get(function (location) {
                     var firebase = new Firebase("https://ourmap.firebaseio.com/");
 
-                    // Show the position of an added position
                     firebase.on("child_added", function (snapshot) {
-                        renderer.add(snapshot.key(), snapshot.val())
+                        var user = {key: snapshot.key(), location: snapshot.val()};
+                        renderer.add(user);
                     });
 
-                    // Remove the position from display when the position is removed
                     firebase.on("child_removed", function (snapshot) {
-                        renderer.remove(snapshot.key(), snapshot.val());
-                        if(locationKey == snapshot.key()) {
-                            locationKey = null;
+                        renderer.remove(snapshot.key());
+                        if(locally.key == snapshot.key()) {
+                            locally.key = null;
                             Log().log("You lost connection. Refresh to reconnect");
                         }
                     });
 
-                    // Update the position in display when the position is updated
                     firebase.on("child_changed", function (snapshot) {
-                        renderer.update(snapshot.key(), snapshot.val())
+                        var user = {key: snapshot.key(), location: snapshot.val()};
+                        renderer.update(user);
                     });
 
-                    // Add the user position to Firebase
                     firebase.push(location).then(function (ref) {
-                        // Remove the user position from Firebase when the user disconnects
-                        locationKey = ref.key();
+                        locally.key = ref.key();
+                        locally.loation = location;
                         firebase.child(ref.key()).onDisconnect().remove();
                     });
 
@@ -109,14 +106,11 @@ var Positions = function() {
                                 }
                             };
 
-                            renderer.status("Your position: " + location.lat + ", " + location.lng + ", updated " + new Date());
-
-                            if(locationKey != null && (location.lat != previousLocation.lat || location.lng != previousLocation.lng)) {
-                                // Update the user position to Firebase
-                                firebase.child(locationKey).set(location, onComplete);
+                            if(locally.key != null && (location.lat != locally.lat || location.lng != locally.lng)) {
+                                firebase.child(locally.key).set(location, onComplete);
                             }
 
-                            previousLocation = location;
+                            locally.location = location;
                         });
                     }, 1000);
                 });
