@@ -3,13 +3,13 @@ var Positions = function() {
     var Location = function() {
         var error = function(error) {
             if (error.code == 1) {
-                console.error("PERMISSION_DENIED: User denied access to their location");
+                Log().log("PERMISSION_DENIED: User denied access to their location");
             } else if (error.code === 2) {
-                console.error("POSITION_UNAVAILABLE: Network is down or positioning satellites cannot be reached");
+                Log().log("POSITION_UNAVAILABLE: Network is down or positioning satellites cannot be reached");
             } else if (error.code === 3) {
-                console.error("TIMEOUT: Calculating the user's location too took long");
+                Log().log("TIMEOUT: Calculating the user's location too took long");
             } else {
-                console.error("Unexpected error code")
+                Log().log("Unexpected error code")
             }
         };
 
@@ -22,7 +22,7 @@ var Positions = function() {
                 if (typeof navigator !== "undefined" && typeof navigator.geolocation !== "undefined") {
                     navigator.geolocation.getCurrentPosition(success, error);
                 } else {
-                    console.error("Your browser does not support the HTML5 Geolocation API, so this demo will not work.")
+                    Log().log("Your browser does not support the HTML5 Geolocation API, so this demo will not work.")
                 }
             }
         };
@@ -76,7 +76,6 @@ var Positions = function() {
 
                     // Show the position of an added position
                     firebase.on("child_added", function (snapshot) {
-                        Log().log("Child added. Rendering child");
                         renderer.add(snapshot.key(), snapshot.val())
                     });
 
@@ -91,7 +90,6 @@ var Positions = function() {
 
                     // Update the position in display when the position is updated
                     firebase.on("child_changed", function (snapshot) {
-                        Log().log("Child changed. Rendering change.");
                         renderer.update(snapshot.key(), snapshot.val())
                     });
 
@@ -108,17 +106,13 @@ var Positions = function() {
                             var onComplete = function(error) {
                                 if(error) {
                                     Log().log("Synchronization failed");
-                                } else {
-                                    Log().log("Synchronization succeeded")
                                 }
                             };
 
                             renderer.status("Your position: " + location.lat + ", " + location.lng + ", updated " + new Date());
 
-                            Log().log("PreviousLocation: " + previousLocation.lat + ", " + previousLocation.lng);
                             if(this.locationKey != null && (location.lat != previousLocation.lat || location.lng != previousLocation.lng)) {
                                 // Update the user position to Firebase
-                                Log().log("Detected change in location. Updating Firebase");
                                 firebase.child(this.locationKey).set(location, onComplete);
                             }
 
