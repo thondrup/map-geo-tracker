@@ -106,7 +106,7 @@ var Positions = function() {
                                 }
                             };
 
-                            if(locally.key != null && (location.lat != locally.lat || location.lng != locally.lng)) {
+                            if(locally.key != null && (location.lat != locally.location.lat || location.lng != locally.location.lng)) {
                                 firebase.child(locally.key).set(location, onComplete);
                             }
 
