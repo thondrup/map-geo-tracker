@@ -73,6 +73,7 @@ var Positions = function() {
 
                     // Show the position of an added position
                     firebase.on("child_added", function (snapshot) {
+                        Log().log("Child added. Rendering child");
                         renderer.add(snapshot.key(), snapshot.val())
                     });
 
@@ -87,6 +88,7 @@ var Positions = function() {
 
                     // Update the position in display when the position is updated
                     firebase.on("child_changed", function (snapshot) {
+                        Log().log("Child changed. Rendering change.");
                         renderer.update(snapshot.key(), snapshot.val())
                     });
 
