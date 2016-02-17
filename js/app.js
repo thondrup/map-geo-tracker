@@ -93,26 +93,28 @@ var Positions = function() {
 
                     firebase.push(location).then(function (ref) {
                         locally.key = ref.key();
-                        locally.loation = location;
+                        locally.location = location;
                         firebase.child(ref.key()).onDisconnect().remove();
-                    });
 
-                    // Update the user position every 1 second
-                    setInterval(function() {
-                        new Location().get(function (location) {
-                            var onComplete = function(error) {
-                                if(error) {
-                                    Log().log("Synchronization failed");
+                        // Update the user position every 1 second
+                        setInterval(function() {
+                            new Location().get(function (location) {
+                                var onComplete = function(error) {
+                                    if(error) {
+                                        Log().log("Synchronization failed");
+                                    }
+                                };
+
+                                Log().log("Local:" + locally.location.lat + ", " + locally.location.lng + ". Device: " + location.lat + ", " + location.lng);
+                                if(locally.key != null && (location.lat != locally.location.lat || location.lng != locally.location.lng)) {
+                                    Log().log("Updating Firebase");
+                                    firebase.child(locally.key).set(location, onComplete);
                                 }
-                            };
 
-                            if(locally.key != null && (location.lat != locally.location.lat || location.lng != locally.location.lng)) {
-                                firebase.child(locally.key).set(location, onComplete);
-                            }
-
-                            locally.location = location;
-                        });
-                    }, 1000);
+                                locally.location = location;
+                            });
+                        }, 1000);
+                    });
                 });
             }
         };
