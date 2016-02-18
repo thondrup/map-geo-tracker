@@ -65,6 +65,19 @@ var Positions = function() {
             update: function (user) {
                 var latLng = new google.maps.LatLng(parseFloat(user.location.lat), parseFloat(user.location.lng));
                 markers[user.key].setPosition(latLng);
+            },
+            zoomToBounds: function() {
+                var bounds = new google.maps.LatLngBounds();
+                for (var key in markers) {
+                    bounds.extend(markers[key].getPosition());
+                }
+
+                var offset = 0.002;
+                var center = bounds.getCenter();
+                bounds.extend(new google.maps.LatLng(center.lat() + offset, center.lng() + offset));
+                bounds.extend(new google.maps.LatLng(center.lat() - offset, center.lng() - offset));
+
+                map.fitBounds(bounds)
             }
         };
     };
@@ -93,6 +106,7 @@ var Positions = function() {
                 locally.key = ref.key();
                 locally.location = location;
                 firebase.child(ref.key()).onDisconnect().remove();
+                renderer.zoomToBounds();
             });
         };
 
