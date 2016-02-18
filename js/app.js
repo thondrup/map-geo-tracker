@@ -86,11 +86,19 @@ var Positions = function() {
     var Register = function(renderer) {
         var locally = {};
 
+        var firebase = new Firebase("https://ourmap.firebaseio.com/");
+
+        var pushInitialLocation = function(location) {
+            firebase.push({lat: location.lat, lng: location.lng}).then(function (ref) {
+                locally.key = ref.key();
+                locally.location = location;
+                firebase.child(ref.key()).onDisconnect().remove();
+            });
+        };
+
         return {
             init: function () {
                 new Location().get(function (location) {
-                    var firebase = new Firebase("https://ourmap.firebaseio.com/");
-
                     firebase.on("child_added", function (snapshot) {
                         renderer.add({key: snapshot.key(), location: snapshot.val()});
                     });
@@ -103,26 +111,23 @@ var Positions = function() {
                         renderer.remove(snapshot.key());
                         if(locally.key == snapshot.key()) {
                             locally.key = null;
-                            Log().log("You lost connection. Refresh to reconnect");
+                            Log().log("You lost your user key. Connecting with a new user key.");
+                            pushInitialLocation(location);
                         }
                     });
 
-                    firebase.push({lat: location.lat, lng: location.lng}).then(function (ref) {
-                        locally.key = ref.key();
-                        locally.location = location;
-                        firebase.child(ref.key()).onDisconnect().remove();
+                    pushInitialLocation(location);
 
-                        // Update the user position every 1 second
-                        setInterval(function() {
-                            new Location().get(function (location) {
-                                if(locally.key != null && !location.equals(locally.location)) {
-                                    firebase.child(locally.key).set({lat: location.lat, lng: location.lng});
-                                }
+                    // Update the user position every 1 second
+                    setInterval(function() {
+                        new Location().get(function (location) {
+                            if(locally.key != null && !location.equals(locally.location)) {
+                                firebase.child(locally.key).set({lat: location.lat, lng: location.lng});
+                            }
 
-                                locally.location = location;
-                            });
-                        }, 1000);
-                    });
+                            locally.location = location;
+                        });
+                    }, 1000);
                 });
             }
         };
