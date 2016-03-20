@@ -5,17 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Map</title>
     <script src="https://cdn.firebase.com/js/client/2.4.0/firebase.js"></script>
+    <script src="js/location.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/register.js"></script>
     <script src="js/app.js"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=visualization&callback=initMap"></script>
     <link rel="stylesheet" type="text/css" href="css/app.css">
 </head>
 <body>
     <div id="map" class="map"></div>
-    <div id="log"></div>
-    <script>
-        function initMap() {
-            new Positions().init();
-        }
-    </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?libraries=visualization&callback=initMap"></script>
 </body>
 </html>
