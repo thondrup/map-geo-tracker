@@ -1,4 +1,4 @@
-var Renderer = function(mapElmt) {
+function Renderer(mapElmt) {
 
     var map = new google.maps.Map(mapElmt, {
         center: {lat: 0, lng: 0},
@@ -38,5 +38,5 @@ var Renderer = function(mapElmt) {
             map.fitBounds(bounds)
         }
     };
-    
-};
+
+}

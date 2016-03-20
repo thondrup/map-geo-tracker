@@ -1,5 +1,5 @@
-var Register = function(renderer) {
-  
+function Register(renderer) {
+
     var locally = {};
 
     var firebase = new Firebase("https://ourmap.firebaseio.com/");
@@ -49,4 +49,4 @@ var Register = function(renderer) {
         }
     };
 
-};
+}

@@ -1,4 +1,4 @@
-var Location = function() {
+function Location() {
 
     var error = function(error) {
         if (error.code == 1) {
@@ -36,5 +36,5 @@ var Location = function() {
             }
         }
     };
-    
-};
+
+}
