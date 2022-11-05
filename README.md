@@ -1,4 +1,4 @@
-# Map
+# Map Geo Tracker
 
 ## Why create it?
 I want all the people in a group to see each others geo positions on a map.
